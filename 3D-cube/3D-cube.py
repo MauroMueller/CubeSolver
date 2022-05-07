@@ -14,7 +14,53 @@ ORANGE = (255, 100, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 
+class Cube():
+    def __init__(self, size=3, colors=[BLUE, GREEN, WHITE, YELLOW, ORANGE, RED]):
+        self.size = size
+        self.colors = colors
+        self.stickers_used = True
+        self.cube_stickers = [[[self.colors[k] for i in range(self.size)] for j in range(self.size)] for k in range(6)]
+
+    def notation_convert(self, sticker_notation=False):
+        if sticker_notation:
+            if not self.stickers_used:
+                # convert cubie notation to sticker notation
+                # TODO
+                self.cube_stickers = None
+                self.stickers_used = True
+            return self.cube_stickers    
+        if self.stickers_used:
+            # convert sticker notation to cubie notation
+            # TODO
+            self.cube_cubies = None
+            self.stickers_used = False
+        return self.cube_cubies
+
+    def get_cube_state(self, sticker_notation=False):
+        if sticker_notation:
+            if not self.stickers_used:
+                self.notation_convert(sticker_notation=True)
+            return self.cube_stickers
+        if self.stickers_used:
+            self.notation_convert()
+        return self.cube_cubies
+
+def main():
+    cube = Cube()
+    draw(cube)
+    print(np.array(cube.get_cube_state(sticker_notation=True)))
+    print("#\n#\n#\n\n\n#\n#\n#")
+    print(np.array(cube.get_cube_state(sticker_notation=False)))
+    print("#\n#\n#\n\n\n#\n#\n#")
+    print(np.array(cube.get_cube_state(sticker_notation=True)))
+
+#
+# 3D render
+#
+
 LINE_THICKNESS = 2
+
+angles = (0, 0, 0)
 
 def get_screen_size():
     try:
@@ -26,8 +72,6 @@ def get_screen_size():
     return WIDTH, HEIGHT, CENTER, SCALE
 
 WIDTH, HEIGHT, CENTER, SCALE = get_screen_size()
-
-angles = (0, 0, 0)
 
 class Button():
     def __init__(self, screen, resizeable, x, y, width, height, text, action, color=GREY, fontname="Arial", fontsize=0, textcolor=BLACK):
@@ -94,14 +138,17 @@ def button_action(action):
         global angles
         angles = (0, 0, 0)
 
-def main():
+def draw(cube):
+    if cube.size != 3:
+        return
     global WIDTH, HEIGHT, CENTER, SCALE, angles
 
     cube_vertices = [[[[x, y, z] for x in range(-3, 4, 2)] for y in range(-3, 4, 2)] for z in range(-3, 4, 2)]
 
     projection_matrix = [[1, 0, 0], [0, 1, 0]]
 
-    motion_matrix = [[0.0, -0.02], [0.02, 0], [0.0, 0.0]]
+    motion_matrix_1 = [[0.0, -0.02], [0.02, 0], [0.0, 0.0]]
+    motion_matrix_2 = [[0.0, -0.02], [0.02, 0], [0.0, 0.0]]
 
     pygame.display.set_caption("3D Cube")
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -122,7 +169,10 @@ def main():
                 WIDTH, HEIGHT, CENTER, SCALE = get_screen_size()
             elif event.type == pygame.MOUSEMOTION and pygame.mouse.get_pressed()[0]:
                 motion = pygame.mouse.get_rel()
-                motion = np.dot(motion_matrix, motion)
+                if angles[0] < math.pi:
+                    motion = np.dot(motion_matrix_1, motion)
+                else:
+                    motion = np.dot(motion_matrix_2, motion)
                 angles = (angles + motion) % (2*math.pi)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 orient_button.pressed(pygame.mouse.get_pos())
@@ -145,78 +195,78 @@ def main():
         
         cube_vertices_projected = np.reshape(cube_vertices_projected, (4, 4, 4, 2))
 
-        # face 1 (blue)
+        # face 0 (blue)
         if (angles[0] < math.pi/2 or angles[0] > 3*math.pi/2) != (angles[1] < math.pi/2 or angles[1] > 3*math.pi/2):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][0], cube_vertices_projected[0][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][3], cube_vertices_projected[0][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][3], cube_vertices_projected[0][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][0], cube_vertices_projected[0][0][0], LINE_THICKNESS)
-
-            pygame.draw.line(screen, BLUE, cube_vertices_projected[0][1][0], cube_vertices_projected[0][1][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][2][0], cube_vertices_projected[0][2][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][1], cube_vertices_projected[0][3][1], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][2], cube_vertices_projected[0][3][2], LINE_THICKNESS)
-    
-        # face 2 (green)
-        if not ((angles[0] < math.pi/2 or angles[0] > 3*math.pi/2) != (angles[1] < math.pi/2 or angles[1] > 3*math.pi/2)):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][0], cube_vertices_projected[3][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][3], cube_vertices_projected[3][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][3], cube_vertices_projected[3][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][0], cube_vertices_projected[3][0][0], LINE_THICKNESS)
-
-            pygame.draw.line(screen, GREEN, cube_vertices_projected[3][1][0], cube_vertices_projected[3][1][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][2][0], cube_vertices_projected[3][2][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][1], cube_vertices_projected[3][3][1], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][2], cube_vertices_projected[3][3][2], LINE_THICKNESS)
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[0][i][2-j], (cube_vertices_projected[0][i][j], cube_vertices_projected[0][i+1][j], cube_vertices_projected[0][i+1][j+1], cube_vertices_projected[0][i][j+1]))
             
-        # face 3 (black)
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][i], cube_vertices_projected[0][3][i], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][i][0], cube_vertices_projected[0][i][3], LINE_THICKNESS)
+
+        # face 1 (green)
+        if not ((angles[0] < math.pi/2 or angles[0] > 3*math.pi/2) != (angles[1] < math.pi/2 or angles[1] > 3*math.pi/2)):
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[1][i][j], (cube_vertices_projected[3][i][j], cube_vertices_projected[3][i+1][j], cube_vertices_projected[3][i+1][j+1], cube_vertices_projected[3][i][j+1]))
+
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][i], cube_vertices_projected[3][3][i], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[3][i][0], cube_vertices_projected[3][i][3], LINE_THICKNESS)
+          
+        # face 2 (white)
         if not ((angles[0] > math.pi) != (angles[1] < math.pi/2 or angles[1] > 3*math.pi/2)):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][0], cube_vertices_projected[0][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][3], cube_vertices_projected[3][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][3], cube_vertices_projected[3][0][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][0], cube_vertices_projected[0][0][0], LINE_THICKNESS)
-
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[1][0][0], cube_vertices_projected[1][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][1], cube_vertices_projected[3][0][1], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[2][0][3], cube_vertices_projected[2][0][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][2], cube_vertices_projected[0][0][2], LINE_THICKNESS)
-        
-        # face 4 (yellow)
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[2][i][j], (cube_vertices_projected[i][0][j], cube_vertices_projected[i+1][0][j], cube_vertices_projected[i+1][0][j+1], cube_vertices_projected[i][0][j+1]))
+            
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[i][0][0], cube_vertices_projected[i][0][3], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][i], cube_vertices_projected[3][0][i], LINE_THICKNESS)
+                    
+        # face 3 (yellow)
         if (angles[0] > math.pi) != (angles[1] < math.pi/2 or angles[1] > 3*math.pi/2):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][0], cube_vertices_projected[0][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][3], cube_vertices_projected[3][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][3], cube_vertices_projected[3][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][0], cube_vertices_projected[0][3][0], LINE_THICKNESS)
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[3][i][2-j], (cube_vertices_projected[i][3][j], cube_vertices_projected[i+1][3][j], cube_vertices_projected[i+1][3][j+1], cube_vertices_projected[i][3][j+1]))
 
-            pygame.draw.line(screen, YELLOW, cube_vertices_projected[1][3][0], cube_vertices_projected[1][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][1], cube_vertices_projected[3][3][1], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[2][3][3], cube_vertices_projected[2][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][2], cube_vertices_projected[0][3][2], LINE_THICKNESS)
-
-        # face 5 (orange)
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[i][3][0], cube_vertices_projected[i][3][3], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][i], cube_vertices_projected[3][3][i], LINE_THICKNESS)
+            
+        # face 4 (orange)
         if (angles[1] < math.pi):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][0], cube_vertices_projected[0][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][0], cube_vertices_projected[3][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][0], cube_vertices_projected[3][0][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][0], cube_vertices_projected[0][0][0], LINE_THICKNESS)
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[4][i][2-j], (cube_vertices_projected[i][j][0], cube_vertices_projected[i+1][j][0], cube_vertices_projected[i+1][j+1][0], cube_vertices_projected[i][j+1][0]))
 
-            pygame.draw.line(screen, ORANGE, cube_vertices_projected[1][0][0], cube_vertices_projected[1][3][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][1][0], cube_vertices_projected[3][1][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[2][3][0], cube_vertices_projected[2][0][0], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][2][0], cube_vertices_projected[0][2][0], LINE_THICKNESS)
-
-        # face 6 (red)
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[i][0][0], cube_vertices_projected[i][3][0], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][i][0], cube_vertices_projected[3][i][0], LINE_THICKNESS)
+            
+        # face 5 (red)
         if not (angles[1] < math.pi):
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][0][3], cube_vertices_projected[0][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][3][3], cube_vertices_projected[3][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][3][3], cube_vertices_projected[3][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][0][3], cube_vertices_projected[0][0][3], LINE_THICKNESS)
+            #faces
+            for i in range(3):
+                for j in range(3):
+                    pygame.draw.polygon(screen, cube.get_cube_state(sticker_notation=True)[5][i][j], (cube_vertices_projected[i][j][3], cube_vertices_projected[i+1][j][3], cube_vertices_projected[i+1][j+1][3], cube_vertices_projected[i][j+1][3]))
 
-            pygame.draw.line(screen, RED, cube_vertices_projected[1][0][3], cube_vertices_projected[1][3][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[0][1][3], cube_vertices_projected[3][1][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[2][3][3], cube_vertices_projected[2][0][3], LINE_THICKNESS)
-            pygame.draw.line(screen, BLACK, cube_vertices_projected[3][2][3], cube_vertices_projected[0][2][3], LINE_THICKNESS)
-
+            #lines
+            for i in range(4):
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[i][0][3], cube_vertices_projected[i][3][3], LINE_THICKNESS)
+                pygame.draw.line(screen, BLACK, cube_vertices_projected[0][i][3], cube_vertices_projected[3][i][3], LINE_THICKNESS)
+            
         # draw buttons
         orient_button.draw()
 
