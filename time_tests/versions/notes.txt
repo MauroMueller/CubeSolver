@@ -1,0 +1,7 @@
+1.py	version 1:	with two moves on same layer
+2.py	version 2:	no two moves on same layer
+3.py	version 3:	no three moves on opposite layers
+4.py	version 4:	linear
+5.py	version 5:	numpy
+6.py	version 6:	kociemba with generate_cube() doing the first step
+7.py	version 6:	kociemba with generate_cube() doing the second step
